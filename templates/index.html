@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Counter</title>
+<style>
+  .counter-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .counter {
+    border: 1px solid #000;
+    padding: 10px;
+    margin: 0 5px;
+    width: 50px;
+    text-align: center;
+  }
+  .operator {
+    margin: 0 10px;
+    font-size: 24px;
+  }
+  #result {
+    border: 1px solid #000;
+    padding: 10px;
+    width: 100px;
+    text-align: center;
+    margin-left: 10px;
+      transition: background-color 0.5s ease;
+  }
+  #countBtn {
+    padding: 10px 20px;
+    margin-left: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="counter-container">
+  <input type="number" id="num1" class="counter">
+  <select id="operator" class="operator"></select>
+  <input type="number" id="num2" class="counter">
+  <button id="equalsBtn" onclick="calculate()">=</button>
+  <input type="text" id="result" readonly>
+</div>
+
+<script>
+
+function fetchOperators() {
+  fetch('http://localhost:8000/calculator/operators')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      const operators = data.operators; // Access the operators property of the response
+      const operatorSelect = document.getElementById('operator');
+      operators.forEach(op => {
+        let option = document.createElement('option');
+        option.value = op;
+        option.textContent = op;
+        operatorSelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching operators:', error);
+      alert('Failed to load operators from the server.');
+    });
+}
+
+function calculate() {
+  var num1 = parseInt(document.getElementById('num1').value, 10);
+  var num2 = parseInt(document.getElementById('num2').value, 10);
+  var operator = document.getElementById('operator').value;
+
+  var postData = {
+    operand1: num1,
+    operand2: num2,
+    operator: operator
+  };
+
+  fetch('http://localhost:8000/calculator/calculate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(postData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    var resultInput = document.getElementById('result');
+    resultInput.value = data.result;
+    resultInput.style.backgroundColor = data.color;
+  })
+  .catch(error => console.error('Error in calculation:', error));
+}
+
+window.onload = fetchOperators;
+</script>
+</body>
+</html>
